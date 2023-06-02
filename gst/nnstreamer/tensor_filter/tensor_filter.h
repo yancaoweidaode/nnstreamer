@@ -28,7 +28,7 @@
 
 #ifndef __GST_TENSOR_FILTER_H__
 #define __GST_TENSOR_FILTER_H__
-
+// gst是gstreamer的缩写，gstreamer是一个开源的多媒体框架，可以用来创建多媒体应用程序，比如播放器，录音机，视频编辑器等等。
 #include <gst/gst.h>
 #include <gst/gstinfo.h>
 #include <gst/base/gstbasetransform.h>
@@ -58,6 +58,7 @@ typedef struct _GstTensorFilterClass GstTensorFilterClass;
 /**
  * @brief Internal data structure for tensor_filter instances.
  */
+//* 该结构体是tensor_filter实例的内部数据结构
 struct _GstTensorFilter
 {
   GstBaseTransform element;     /**< This is the parent object */
@@ -76,6 +77,7 @@ struct _GstTensorFilter
  * its child (concrete class) GstVideoConverter.
  * Note that GstTensorFilterClass is a concrete class; thus we need to look at both.
  */
+//* 该结构体继承了GstBaseTransformClass，GstBaseTransformClass是一个抽象类，GstTensorFilterClass是一个具体类
 struct _GstTensorFilterClass
 {
   GstBaseTransformClass parent_class;   /**< Inherits GstBaseTransformClass */

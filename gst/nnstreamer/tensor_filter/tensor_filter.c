@@ -74,7 +74,6 @@
 
 /** @todo rename & move this to better location */
 #define EVENT_NAME_UPDATE_MODEL "evt_update_model"
-
 GST_DEBUG_CATEGORY_STATIC (gst_tensor_filter_debug);
 #define GST_CAT_DEFAULT gst_tensor_filter_debug
 
@@ -99,11 +98,11 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
  */
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_ALWAYS,
+    GST_PAD_ALWAYS,                  // GST_PAD_ALWAYS是
     GST_STATIC_CAPS (CAPS_STRING));
 
-#define gst_tensor_filter_parent_class parent_class
-G_DEFINE_TYPE (GstTensorFilter, gst_tensor_filter, GST_TYPE_BASE_TRANSFORM);
+#define gst_tensor_filter_parent_class parent_class       
+G_DEFINE_TYPE (GstTensorFilter, gst_tensor_filter, GST_TYPE_BASE_TRANSFORM);   // 这是类定义的宏的一种写法，这种写法是Glib的方式，生成了一个GObject的子对象。
 
 /**
  * @brief Headroom (extra duration) added to actual latency estimate reported
@@ -119,7 +118,9 @@ G_DEFINE_TYPE (GstTensorFilter, gst_tensor_filter, GST_TYPE_BASE_TRANSFORM);
  */
 #define LATENCY_REPORT_THRESHOLD 0.25
 
-/* GObject vmethod implementations */
+/* GObject vmethod implementations */   // vmethod是虚函数   
+static void gst_tensor_filter_class_init (GstTensorFilterClass * klass);
+static void gst_tensor_filter_init (GstTensorFilter * self);
 static void gst_tensor_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_tensor_filter_get_property (GObject * object, guint prop_id,
@@ -150,54 +151,55 @@ static gboolean gst_tensor_filter_src_event (GstBaseTransform * trans,
 /**
  * @brief initialize the tensor_filter's class
  */
+//* 对所需要的类进行初始化，这里是对GstTensorFilterClass类进行初始化，这个类是GstBaseTransform类的子类，GstBaseTransform类是GstElement类的子类，GstElement类是GObject类的子类。
 static void
 gst_tensor_filter_class_init (GstTensorFilterClass * klass)
 {
-  GObjectClass *gobject_class;
+  GObjectClass *gobject_class;              //* GStreamer base object class.注意这个是GStreamer的基类，是处理视频流的类，而不是tensor_filter这种东西。
   GstElementClass *gstelement_class;
-  GstBaseTransformClass *trans_class;
+  GstBaseTransformClass *trans_class;       //* 这三种不同的类型是相互继承的，GstElementClass是GObject的子类，GstBaseTransformClass是GstElementClass的子类，GstTensorFilterClass是GstBaseTransformClass的子类。
 
   GST_DEBUG_CATEGORY_INIT (gst_tensor_filter_debug, "tensor_filter", 0,
-      "Tensor filter to invoke neural network model");
+      "Tensor filter to invoke neural network model");   // 这个函数是GStreamer的调试函数，用于输出调试信息，第一个参数是调试信息的名称，第二个参数是调试信息的描述，第三个参数是调试信息的父类，第四个参数是调试信息的详细描述。
 
   trans_class = (GstBaseTransformClass *) klass;
   gstelement_class = (GstElementClass *) trans_class;
   gobject_class = (GObjectClass *) gstelement_class;
 
-  gobject_class->set_property = gst_tensor_filter_set_property;
+  gobject_class->set_property = gst_tensor_filter_set_property;   // set_property是GObject的虚函数，这里是重写了这个虚函数，这个虚函数是用来设置属性的。
   gobject_class->get_property = gst_tensor_filter_get_property;
   gobject_class->finalize = gst_tensor_filter_finalize;
 
-  gst_tensor_filter_install_properties (gobject_class);
+  gst_tensor_filter_install_properties (gobject_class);  // 这个函数是安装属性的，这个函数在tensor_filter_common.c中定义。
 
   gst_element_class_set_details_simple (gstelement_class,
       "TensorFilter",
       "Filter/Tensor",
       "Handles NN Frameworks (e.g., tensorflow) as Media Filters with other/tensor type stream",
-      "MyungJoo Ham <myungjoo.ham@samsung.com>");
+      "MyungJoo Ham <myungjoo.ham@samsung.com>");    // 这个函数是设置元素的详细信息，第一个参数是元素的类，第二个参数是元素的名称，第三个参数是元素的分类，第四个参数是元素的描述，第五个参数是元素的作者。
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
+      gst_static_pad_template_get (&src_factory));   
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
   /* Refer: https://gstreamer.freedesktop.org/documentation/design/element-transform.html */
   trans_class->passthrough_on_same_caps = FALSE;
 
-  /* Processing units */
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_tensor_filter_transform);
+  /* Processing units */   //* 处理单元
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_tensor_filter_transform);   //^ GST_DEBUG_FUNCPTR没有什么特殊的含义，只是为了能够使用函数。
 
-  /* Negotiation units */
+  /* Negotiation units */  //* 协商单元
   trans_class->transform_caps =
-      GST_DEBUG_FUNCPTR (gst_tensor_filter_transform_caps);
+      GST_DEBUG_FUNCPTR (gst_tensor_filter_transform_caps);   
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_tensor_filter_fixate_caps);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_tensor_filter_set_caps);
 
-  /* Allocation units */
+  /* Allocation units */   //* 配置单元
   trans_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_tensor_filter_transform_size);
 
-  /* setup events */
+/* setup events */         //* envet是在不同的elements之间传递的消息
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_tensor_filter_sink_event);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_tensor_filter_src_event);
 
@@ -215,6 +217,7 @@ gst_tensor_filter_class_init (GstTensorFilterClass * klass)
  * set pad calback functions
  * initialize instance structure
  */
+//! GstTensorFilter和GstTensorFilterClass的区别是什么？需要从
 static void
 gst_tensor_filter_init (GstTensorFilter * self)
 {
